@@ -6,26 +6,30 @@
     <script type="text/javascript">
         Snake = {
             ctx: null,
-            boardSize: 25,
+            canvas: null,
+            boardSize: 20,
             tileSize: 20,
             snakeCoordinates: [],
             moveDirection: 'up',
-            foodX: 0,
-            foodY: 0,
-            speed: 2,
+            speed: 5,
+            food: {
+                x: 0,
+                y: 0
+            },
             init: function () {
-                let canvas = document.getElementById('tutorial');
-                if (!canvas.getContext) {
+                this.canvas = document.getElementById('snake-canvas');
+                if (!this.canvas.getContext) {
                     return;
                 }
 
-                this.ctx = canvas.getContext('2d');
+                let sceneSize = this.boardSize * this.tileSize;
 
-                for (let i = 0; i < this.boardSize; i++) {
-                    for (let j = 0; j < this.boardSize; j++) {
-                        this.ctx.strokeRect(i * this.tileSize, j * this.tileSize, this.tileSize, this.tileSize);
-                    }
-                }
+                this.canvas.width = sceneSize;
+                this.canvas.height = sceneSize;
+
+                this.ctx = this.canvas.getContext('2d');
+
+
 
                 this.snakeCoordinates.push({
                     x: 12,
@@ -63,86 +67,102 @@
                     }
                 };
 
+                this.updateFood();
                 this.renterBoard();
-
-                this.setFoodPoint();
 
                 setInterval(() => {
                     this.moveSnake();
                     this.renterBoard();
-                    this.addFood();
                 }, 500 / this.speed);
 
 
             },
-            setFoodPoint() {
-                // to do - optimize this
-                this.foodX = Math.floor(Math.random() * this.boardSize - 1);
-                this.foodY = Math.floor(Math.random() * this.boardSize - 1);
+            updateFood() {
+                let freeCellsCount = Math.pow(this.boardSize, 2) - this.snakeCoordinates.length;
+                let randomCellNumber = Math.floor(Math.random() * freeCellsCount);
 
-                for (let i = 0; i < this.snakeCoordinates.length; i++) {
-                    if (this.snakeCoordinates[i].x === this.foodX && this.snakeCoordinates[i].y === this.foodY) {
-                        return this.setFoodPoint();
+                let i = 0;
+                for (let x = 0; x < this.boardSize && i <= randomCellNumber; x++) {
+                    for (let y = 0; y < this.boardSize && i <= randomCellNumber; y++) {
+                        if (this.snakeCoordinates.find(c => c.x === x && c.y === y) !== undefined) {
+                            continue;
+                        }
+
+                        if (randomCellNumber === i) {
+                            this.food.x = x;
+                            this.food.y = y;
+                        }
+
+                        i = i + 1;
                     }
                 }
             },
-            addFood() {
-                this.pointOn(this.foodX, this.foodY);
-            },
             moveSnake() {
-                let lastIndex = this.snakeCoordinates.length - 1,
-                    headX = this.snakeCoordinates[0].x,
-                    headY = this.snakeCoordinates[0].y,
-                    newY, newX;
+                let head = this.snakeCoordinates[0],
+                    tail = Object.assign({}, head);
+
+                this.snakeCoordinates.splice(this.snakeCoordinates.length - 1, 1);
 
                 switch (this.moveDirection) {
                     case 'up':
-                        newY = headY - 1;
-                        if (newY < 0) {
-                            newY = this.boardSize - 1;
-                        }
-                        this.snakeCoordinates[lastIndex].x = headX;
-                        this.snakeCoordinates[lastIndex].y = newY;
+                        tail.y = (head.y === 0 ? this.boardSize : head.y) - 1;
                         break;
                     case 'down':
-                        newY = headY + 1;
-                        if (newY > this.boardSize - 1) {
-                            newY = 0;
-                        }
-                        this.snakeCoordinates[lastIndex].x = headX;
-                        this.snakeCoordinates[lastIndex].y = newY;
+                        tail.y = (head.y === this.boardSize - 1 ? 0 : head.y) + 1;
                         break;
                     case 'left':
-                        newX = headX - 1;
-                        if (newX < 0) {
-                            newX = this.boardSize - 1;
-                        }
-                        this.snakeCoordinates[lastIndex].x = newX;
-                        this.snakeCoordinates[lastIndex].y = headY;
+                        tail.x = (head.x === 0 ? this.boardSize : head.x) - 1;
                         break;
                     case 'right':
-                        newX = headX + 1;
-                        if (newX > this.boardSize - 1) {
-                            newX = 0;
-                        }
-                        this.snakeCoordinates[lastIndex].x = newX;
-                        this.snakeCoordinates[lastIndex].y = headY;
+                        tail.x = (head.x === this.boardSize - 1 ? 0 : head.x) + 1;
                         break;
                 }
 
-                let t = this.snakeCoordinates.splice(lastIndex, 1);
-                this.snakeCoordinates.unshift(t[0]);
+                this.snakeCoordinates.unshift(tail);
+
+                if (this.samePoint(this.food, tail)) {
+                    this.feedSnake();
+                    this.updateFood();
+                }
+            },
+            feedSnake: function () {
+                let head = this.snakeCoordinates[0],
+                    tail = Object.assign({}, this.food);
+
+                switch (this.moveDirection) {
+                    case 'up':
+                        tail.y = (head.y === 0 ? this.boardSize : head.y) - 1;
+                        break;
+                    case 'down':
+                        tail.y = (head.y === this.boardSize - 1 ? 0 : head.y) + 1;
+                        break;
+                    case 'left':
+                        tail.x = (head.x === 0 ? this.boardSize : head.x) - 1;
+                        break;
+                    case 'right':
+                        tail.x = (head.x === this.boardSize - 1 ? 0 : head.x) + 1;
+                        break;
+                }
+
+                this.snakeCoordinates.unshift(tail);
+            },
+            samePoint: function (a, b) {
+                return a.x === b.x && a.y === b.y;
             },
             renterBoard: function () {
-                for (let i = 0; i < this.boardSize; i++) {
-                    for (let j = 0; j < this.boardSize; j++) {
-                        this.clearPoint(i, j);
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+                for (let x = 0; x < this.boardSize; x++) {
+                    for (let y = 0; y < this.boardSize; y++) {
+                        this.ctx.strokeRect(x * this.tileSize, y * this.tileSize, this.tileSize, this.tileSize);
                     }
                 }
 
                 for (let i = 0; i < this.snakeCoordinates.length; i++) {
                     this.pointOn(this.snakeCoordinates[i].x, this.snakeCoordinates[i].y);
                 }
+
+                this.pointOn(this.food.x, this.food.y);
             },
             pointOn: function (x, y) {
                 this.ctx.fillRect(x * this.tileSize, y * this.tileSize, this.tileSize, this.tileSize);
@@ -153,18 +173,22 @@
         };
     </script>
     <style type="text/css">
+        body {
+            margin: 0;
+            padding: 0;
+        }
         canvas {
             border: 1px solid black;
             position: absolute;
             top: 0;
+            right: 0;
             bottom: 0;
             left: 0;
-            right: 0;
             margin: auto;
         }
     </style>
 </head>
 <body onload="Snake.init()">
-<canvas id="tutorial" width="500" height="500"></canvas>
+<canvas id="snake-canvas"></canvas>
 </body>
 </html>
