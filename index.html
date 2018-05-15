@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>Canvas tutorial</title>
+    <script type="text/javascript">
+        Snake = {
+            ctx: null,
+            boardSize: 25,
+            tileSize: 20,
+            snakeCoordinates: [],
+            moveDirection: 'up',
+            foodX: 0,
+            foodY: 0,
+            speed: 2,
+            init: function () {
+                let canvas = document.getElementById('tutorial');
+                if (!canvas.getContext) {
+                    return;
+                }
+
+                this.ctx = canvas.getContext('2d');
+
+                for (let i = 0; i < this.boardSize; i++) {
+                    for (let j = 0; j < this.boardSize; j++) {
+                        this.ctx.strokeRect(i * this.tileSize, j * this.tileSize, this.tileSize, this.tileSize);
+                    }
+                }
+
+                this.snakeCoordinates.push({
+                    x: 12,
+                    y: 21
+                }, {
+                    x: 12,
+                    y: 22
+                }, {
+                    x: 12,
+                    y: 23
+                }, {
+                    x: 12,
+                    y: 24
+                });
+
+                document.onkeydown = (e) => {
+                    e = e || window.event;
+
+                    if (e.keyCode === 38) {
+                        if (this.moveDirection !== 'down') {
+                            this.moveDirection = 'up';
+                        }
+                    } else if (e.keyCode === 40) {
+                        if (this.moveDirection !== 'up') {
+                            this.moveDirection = 'down';
+                        }
+                    } else if (e.keyCode === 37) {
+                        if (this.moveDirection !== 'right') {
+                            this.moveDirection = 'left';
+                        }
+                    } else if (e.keyCode === 39) {
+                        if (this.moveDirection !== 'left') {
+                            this.moveDirection = 'right';
+                        }
+                    }
+                };
+
+                this.renterBoard();
+
+                this.setFoodPoint();
+
+                setInterval(() => {
+                    this.moveSnake();
+                    this.renterBoard();
+                    this.addFood();
+                }, 500 / this.speed);
+
+
+            },
+            setFoodPoint() {
+                // to do - optimize this
+                this.foodX = Math.floor(Math.random() * this.boardSize - 1);
+                this.foodY = Math.floor(Math.random() * this.boardSize - 1);
+
+                for (let i = 0; i < this.snakeCoordinates.length; i++) {
+                    if (this.snakeCoordinates[i].x === this.foodX && this.snakeCoordinates[i].y === this.foodY) {
+                        return this.setFoodPoint();
+                    }
+                }
+            },
+            addFood() {
+                this.pointOn(this.foodX, this.foodY);
+            },
+            moveSnake() {
+                let lastIndex = this.snakeCoordinates.length - 1,
+                    headX = this.snakeCoordinates[0].x,
+                    headY = this.snakeCoordinates[0].y,
+                    newY, newX;
+
+                switch (this.moveDirection) {
+                    case 'up':
+                        newY = headY - 1;
+                        if (newY < 0) {
+                            newY = this.boardSize - 1;
+                        }
+                        this.snakeCoordinates[lastIndex].x = headX;
+                        this.snakeCoordinates[lastIndex].y = newY;
+                        break;
+                    case 'down':
+                        newY = headY + 1;
+                        if (newY > this.boardSize - 1) {
+                            newY = 0;
+                        }
+                        this.snakeCoordinates[lastIndex].x = headX;
+                        this.snakeCoordinates[lastIndex].y = newY;
+                        break;
+                    case 'left':
+                        newX = headX - 1;
+                        if (newX < 0) {
+                            newX = this.boardSize - 1;
+                        }
+                        this.snakeCoordinates[lastIndex].x = newX;
+                        this.snakeCoordinates[lastIndex].y = headY;
+                        break;
+                    case 'right':
+                        newX = headX + 1;
+                        if (newX > this.boardSize - 1) {
+                            newX = 0;
+                        }
+                        this.snakeCoordinates[lastIndex].x = newX;
+                        this.snakeCoordinates[lastIndex].y = headY;
+                        break;
+                }
+
+                let t = this.snakeCoordinates.splice(lastIndex, 1);
+                this.snakeCoordinates.unshift(t[0]);
+            },
+            renterBoard: function () {
+                for (let i = 0; i < this.boardSize; i++) {
+                    for (let j = 0; j < this.boardSize; j++) {
+                        this.clearPoint(i, j);
+                    }
+                }
+
+                for (let i = 0; i < this.snakeCoordinates.length; i++) {
+                    this.pointOn(this.snakeCoordinates[i].x, this.snakeCoordinates[i].y);
+                }
+            },
+            pointOn: function (x, y) {
+                this.ctx.fillRect(x * this.tileSize, y * this.tileSize, this.tileSize, this.tileSize);
+            },
+            clearPoint: function (x, y) {
+                this.ctx.clearRect((x * this.tileSize) + 1, (y * this.tileSize) + 1, this.tileSize - 2, this.tileSize - 2);
+            }
+        };
+    </script>
+    <style type="text/css">
+        canvas {
+            border: 1px solid black;
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            margin: auto;
+        }
+    </style>
+</head>
+<body onload="Snake.init()">
+<canvas id="tutorial" width="500" height="500"></canvas>
+</body>
+</html>
