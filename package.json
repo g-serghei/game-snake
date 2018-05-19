@@ -1,0 +1,27 @@
+{
+  "name": "game-snake",
+  "version": "1.0.0",
+  "description": "no description",
+  "main": "server/main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/phoenix3008/game-snake.git"
+  },
+  "keywords": [
+    "snake",
+    "game",
+    "multiplayer"
+  ],
+  "author": "Serghei Grigoruta",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/phoenix3008/game-snake/issues"
+  },
+  "homepage": "https://github.com/phoenix3008/game-snake#readme",
+  "dependencies": {
+    "socket.io": "^2.1.1"
+  }
+}
