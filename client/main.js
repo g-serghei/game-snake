@@ -9,9 +9,13 @@ Game = {
     ctx: null,
     canvas: null,
     socket: null,
-    boardSize: 25,
-    tileSize: 20,
-    init: function () {
+    boardSize: null,
+    tileSize: null,
+    init: function (configuration) {
+        this.boardSize = configuration.boardSize;
+        this.tileSize = configuration.tileSize;
+        this.socket = configuration.socket;
+
         this.canvas = document.getElementById('snake-canvas');
         if (!this.canvas.getContext) {
             return;
@@ -22,16 +26,9 @@ Game = {
         this.canvas.height = sceneSize;
         this.ctx = this.canvas.getContext('2d');
 
-        console.log('try to connect');
-        this.socket = io('http://192.168.1.25:3001');
-
         document.onkeydown = this.listenArrows.bind(this);
 
-        let self = this;
-        this.socket.on('render', function (data) {
-            console.log('render');
-            self.renterBoard(data.tableMap);
-        })
+        this.socket.on('render', this.render.bind(this));
     },
     listenArrows: function (e) {
         e = e || window.event;
@@ -63,79 +60,9 @@ Game = {
             direction: direction
         });
     },
-    updateFood() {
-        let freeCellsCount = Math.pow(this.boardSize, 2) - this.snakeCoordinates.length;
-        let randomCellNumber = Math.floor(Math.random() * freeCellsCount);
+    render: function (data) {
+        let tableMap = data.tableMap;
 
-        let i = 0;
-        for (let x = 0; x < this.boardSize && i <= randomCellNumber; x++) {
-            for (let y = 0; y < this.boardSize && i <= randomCellNumber; y++) {
-                if (this.snakeCoordinates.find(c => c.x === x && c.y === y) !== undefined) {
-                    continue;
-                }
-
-                if (randomCellNumber === i) {
-                    this.food.x = x;
-                    this.food.y = y;
-                }
-
-                i = i + 1;
-            }
-        }
-    },
-    moveSnake() {
-        let head = this.snakeCoordinates[0],
-            tail = Object.assign({}, head);
-
-        this.snakeCoordinates.splice(this.snakeCoordinates.length - 1, 1);
-
-        switch (this.moveDirection) {
-            case 'up':
-                tail.y = (head.y === 0 ? this.boardSize : head.y) - 1;
-                break;
-            case 'down':
-                tail.y = (head.y === this.boardSize - 1 ? -1 : head.y) + 1;
-                break;
-            case 'left':
-                tail.x = (head.x === 0 ? this.boardSize : head.x) - 1;
-                break;
-            case 'right':
-                tail.x = (head.x === this.boardSize - 1 ? -1 : head.x) + 1;
-                break;
-        }
-
-        this.snakeCoordinates.unshift(tail);
-
-        if (this.samePoint(this.food, tail)) {
-            this.feedSnake();
-            this.updateFood();
-        }
-    },
-    feedSnake: function () {
-        let head = this.snakeCoordinates[0],
-            tail = Object.assign({}, this.food);
-
-        switch (this.moveDirection) {
-            case 'up':
-                tail.y = (head.y === 0 ? this.boardSize : head.y) - 1;
-                break;
-            case 'down':
-                tail.y = (head.y === this.boardSize - 1 ? -1 : head.y) + 1;
-                break;
-            case 'left':
-                tail.x = (head.x === 0 ? this.boardSize : head.x) - 1;
-                break;
-            case 'right':
-                tail.x = (head.x === this.boardSize - 1 ? -1 : head.x) + 1;
-                break;
-        }
-
-        this.snakeCoordinates.unshift(tail);
-    },
-    samePoint: function (a, b) {
-        return a.x === b.x && a.y === b.y;
-    },
-    renterBoard: function (tableMap) {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
         for (let x = 0; x < this.boardSize; x++) {
@@ -145,15 +72,20 @@ Game = {
         }
 
         for (let i = 0; i < tableMap.length; i++) {
-            this.pointOn(tableMap[i].x, tableMap[i].y);
+            this.pointOn(tableMap[i].x, tableMap[i].y, tableMap[i].color);
+            console.log(tableMap[i].color);
         }
-
-        //this.pointOn(this.food.x, this.food.y);
     },
-    pointOn: function (x, y) {
+    pointOn: function (x, y, color) {
+        color = color || '000000';
+        this.ctx.fillStyle = '#' + color;
         this.ctx.fillRect(x * this.tileSize, y * this.tileSize, this.tileSize, this.tileSize);
-    },
-    clearPoint: function (x, y) {
-        this.ctx.clearRect((x * this.tileSize) + 1, (y * this.tileSize) + 1, this.tileSize - 2, this.tileSize - 2);
     }
 };
+
+let socket = io('http://192.168.1.25:3001');
+socket.on('configuration', function (configuration) {
+    configuration.socket = socket;
+    console.log('configuration', configuration);
+    Game.init(configuration);
+});
