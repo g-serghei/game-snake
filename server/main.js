@@ -16,11 +16,12 @@ const Directions = require('./directions');
         io.on('connection', this.userConnected.bind(this));
 
         setInterval(() => {
-            let tableMap = [];
-            let snakesPoints = this.getSnakesPoints();
+            let tableMap = this.getSnakesPoints();
 
-            for (let i = 0; i < snakesPoints.length; i++) {
-                tableMap.push(snakesPoints[i]);
+            for (let i = 0; i < tableMap.length; i++) {
+                if (tableMap[i].type === 'head') {
+                    tableMap[i].color = 'ff0000';
+                }
             }
 
             tableMap.push(this.food);
@@ -60,8 +61,7 @@ const Directions = require('./directions');
 
         this.snakes.push(socket.snake);
 
-        let snakesPoints = this.getSnakesPoints();
-        this.food = this.getFoodPoint(snakesPoints);
+        this.updateFood();
 
         let self = this;
         socket.on('disconnect', function() {
@@ -106,9 +106,6 @@ const Directions = require('./directions');
             }
         }
 
-        let randomIndex = Math.floor(Math.random() * blankPoints.length - 1);
-
-        return blankPoints[randomIndex];
-    },
-
+        return blankPoints[Math.floor(Math.random() * blankPoints.length - 1)];
+    }
 }).init();

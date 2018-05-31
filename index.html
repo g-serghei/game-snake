@@ -11,6 +11,7 @@
             margin: 0;
             padding: 0;
         }
+
         canvas {
             border: 1px solid black;
             position: absolute;
@@ -20,9 +21,38 @@
             left: 0;
             margin: auto;
         }
+
+        .pre-game {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            flex-direction: column;
+            align-items: center;
+            z-index: 10;
+            background: rgba(255, 255, 255, .9);
+        }
+
+        .pre-game button {
+            margin-top: 10px;
+            width: 202px;
+            height: 30px;
+            display: block;
+        }
+
+        .pre-game input {
+            display: block;
+            width: 200px;
+            height: 20px;
+        }
     </style>
 </head>
 <body>
-    <canvas id="snake-canvas"></canvas>
+<!--<div class="pre-game">
+    <input type="text" placeholder="Enter your name" id="player-name">
+    <button id="start-game">Start</button>
+</div>-->
+<canvas id="snake-canvas"></canvas>
 </body>
 </html>

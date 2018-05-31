@@ -1,6 +1,7 @@
 const Directions = require('./directions');
 
-class Snake {
+module.exports = class Snake {
+
     constructor(params) {
         if (!params.hasOwnProperty('headPosition')) {
             throw new Error('Please specify head position');
@@ -61,6 +62,10 @@ class Snake {
                 break;
         }
 
+        delete this.coordinates[0].type;
+        this.coordinates[0].color = this.color;
+        tail.color = this.color;
+        tail.type = 'head';
         this.coordinates.unshift(tail);
 
         if (Snake.samePoint(this.game.food, tail)) {
@@ -68,6 +73,7 @@ class Snake {
             this.game.updateFood();
         }
     }
+
     feedSnake() {
         let head = this.coordinates[0],
             tail = Object.assign({}, this.game.food);
@@ -89,12 +95,12 @@ class Snake {
                 break;
         }
 
+        delete this.coordinates[0].type;
+        tail.type = 'head';
         this.coordinates.unshift(tail);
     }
+
     static samePoint(a, b) {
         return a.x === b.x && a.y === b.y;
     }
-
-}
-
-module.exports = Snake;
+};

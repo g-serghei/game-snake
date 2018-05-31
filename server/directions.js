@@ -1,8 +1,6 @@
-Directions = {
+module.exports = {
     RIGHT: 'right',
     DOWN: 'down',
     UP: 'up',
     LEFT: 'left'
 };
-
-module.exports = Directions;
